@@ -22,7 +22,10 @@ namespace NH.Bencher
 			_configuration.Configure();
 			_configuration.AddAssembly(typeof(SessionManager).Assembly);
 			_sessionFactory = _configuration.BuildSessionFactory();
-		}
+
+		    _sessionLazy = new Lazy<ISession>(() => _sessionFactory.OpenSession());
+		    _statelessSessionLazy = new Lazy<IStatelessSession>(() => _sessionFactory.OpenStatelessSession());
+        }
 
 		/// <summary>Opens a new session on the existing session factory</summary>
 		/// <returns>ready to use ISession instance</returns>
@@ -33,12 +36,25 @@ namespace NH.Bencher
 			return _sessionFactory.OpenSession();
 		}
 
-		#region Class Property Declarations
-		/// <summary>Gets the session factory created from the initialized configuration. The returned factory is thread safe.</summary>
-		public static ISessionFactory SessionFactory
-		{
-			get { return _sessionFactory; }
-		}
-		#endregion
+	    private static Lazy<ISession> _sessionLazy;
+	    public static ISession Session
+	    {
+	        get { return _sessionLazy.Value; }
+	    }
+
+        /// <summary>Opens a new stateless session on the existing session factory</summary>
+        /// <returns>ready to use ISession instance</returns>
+        /// <remarks>Dispose this instance after you're done with the instance, so after lazy loading has occured. The returned
+        /// ISession instance is <b>not</b> thread safe.</remarks>
+        public static IStatelessSession OpenStatelessSession()
+	    {
+	        return _sessionFactory.OpenStatelessSession();
+	    }
+
+	    private static Lazy<IStatelessSession> _statelessSessionLazy;
+	    public static IStatelessSession StatelessSession
+	    {
+	        get { return _statelessSessionLazy.Value; }
+	    }
 	}
 }
